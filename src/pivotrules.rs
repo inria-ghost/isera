@@ -154,7 +154,7 @@ impl<NUM: CloneableNum> PivotRules<NUM> for BlockSearch<NUM> {
 /// PARALLEL BLOCK SEARCH ///
 /////////////////////////////
 
-//parallel iterator inside of the block perf are fine
+// parallel iterator inside of the block perf are fine
 impl<NUM: CloneableNum> PivotRules<NUM> for ParallelBlockSearch<NUM> {
     fn find_entering_arc(
         &self,
@@ -241,7 +241,7 @@ fn get_rc_from_arc<NUM: CloneableNum>(
     s * (rcplus - rcminus)
 }
 
-//Parallel Best Eligible arc
+// parallel Best Eligible arc
 impl<NUM: CloneableNum> PivotRules<NUM> for ParallelBestEligible<NUM> {
     fn find_entering_arc(
         &self,

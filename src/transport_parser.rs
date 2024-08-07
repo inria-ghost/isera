@@ -19,7 +19,7 @@ use std::fs;
 
 
 
-//TODO ARBITRARY INIT SOURCES AND SINKS 
+// TODO ARBITRARY INIT SOURCES AND SINKS 
 pub fn parsed_graph<NUM:CloneableNum>() -> (
     DiGraph<u32, CustomEdgeIndices<NUM>>,
     Vec<(usize, NUM)>, // Vec<(usize, NUM)>

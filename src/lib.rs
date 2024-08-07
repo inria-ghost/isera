@@ -29,14 +29,12 @@ use std::time::SystemTime;
 pub mod basetypes;
 pub mod pivotrules;
 
-//Initialization with artificial root
+// Initialization with artificial root
 fn initialization<'a, NUM: CloneableNum + 'static>(
     graph: &'a mut DiGraph<u32, CustomEdgeIndices<NUM>>,
     sources: Vec<(usize, NUM)>, //(node_id, demand)
     sinks: Vec<(usize, NUM)>,   //(node_id, demand)
 ) -> (Nodes, Edges<NUM>, GraphState<NUM>) {
-    //println!("source_id = {:?}", sources);
-    //println!("sink_id = {:?}", sinks);
     let mut total_supply_sources: NUM = zero();
     let mut total_supply_sinks: NUM = zero();
     sources
@@ -57,7 +55,7 @@ fn initialization<'a, NUM: CloneableNum + 'static>(
         big_value = big_value / ((one::<NUM>() + one()) + (one::<NUM>() + one()));
     }
 
-    // big_value --arbitrary big value
+    // big_value is an arbitrary big value for the artificial edges
     let mut edge_tree: Vec<usize> = vec![0; graph.node_count() + 1];
 
     let artificial_root = graph.add_node(graph.node_count() as u32);
@@ -189,9 +187,9 @@ fn initialization<'a, NUM: CloneableNum + 'static>(
     (nodes, edges, graphstate)
 }
 
-//New version of compute_node_potentials using tree form of sptree.t to compute them in order
-//they are sorted by distance to root/depth in the tree and starting from the root we compute each
-//potential from the one of its predecessor starting with pi[0] = 0 we have :
+// New version of compute_node_potentials using tree form of sptree.t to compute them in order
+// they are sorted by distance to root/depth in the tree and starting from the root we compute each
+// potential from the one of its predecessor starting with pi[0] = 0 we have :
 //
 //  pi[id] = if arc(id, pred(id))
 //              cost(id, pred(id)) + pi[pred(id)]
@@ -434,11 +432,9 @@ fn _compute_flowchange<'a, NUM: CloneableNum>(
     (min_delta.1, branch, join)
 }
 
-/* Update sptree structure according to entering arc and leaving arc,
-* reorder predecessors to keep tree coherent tree structure from one basis
-* to another.
-*/
-
+/// Update sptree structure according to entering arc and leaving arc,
+/// reorder predecessors to keep tree coherent tree structure from one basis
+/// to another.
 fn update_tree_structures<NUM: CloneableNum>(
     edges: &Edges<NUM>,
     nodes: &mut Nodes,
@@ -452,7 +448,7 @@ fn update_tree_structures<NUM: CloneableNum>(
     if leaving_arc == entering_arc {
         return;
     }
-    //useful structure init
+    // useful structure init
     let node_nb = nodes.thread.len();
     let (i, j) = (edges.source[entering_arc], edges.target[entering_arc]);
     let (k, l) = (edges.source[leaving_arc], edges.target[leaving_arc]);
@@ -460,7 +456,7 @@ fn update_tree_structures<NUM: CloneableNum>(
     let mut path_to_change: &Vec<usize>;
     let mut path_to_root: &Vec<usize>;
 
-    //used to get length of vector path_from_*
+    // used to get length of vector path_from_*
     let cutting_depth: usize;
     if nodes.predecessor[k] == Some(l) {
         nodes.predecessor[k] = None;
@@ -469,7 +465,7 @@ fn update_tree_structures<NUM: CloneableNum>(
         nodes.predecessor[l] = None;
         cutting_depth = nodes.depth[l]
     }
-    //vectors contain id of arcs from i/j to root or removed arc
+    // vectors contain id of arcs from i/j to root or removed arc
     let mut path_from_i: Vec<usize>;
     let mut path_from_j: Vec<usize>;
     if branch {
@@ -480,7 +476,7 @@ fn update_tree_structures<NUM: CloneableNum>(
         path_from_j = vec![j; nodes.depth[j] + 1 - cutting_depth];
     }
 
-    //fill vector
+    // fill vector
     let mut current_node1: Option<usize> = Some(i);
     let mut current_node2: Option<usize> = Some(j);
     for index in 0..path_from_i.len() {
@@ -503,7 +499,7 @@ fn update_tree_structures<NUM: CloneableNum>(
     // update thread_id
     update_thread_last(nodes, k, l, i, j, join, path_to_change, path_to_root);
 
-    //Predecessors update + edge_tree
+    // predecessors update + edge_tree
     pred_edgetree_update(
         entering_arc,
         i,
@@ -523,7 +519,7 @@ fn update_tree_structures<NUM: CloneableNum>(
         path_to_change = &path_from_j;
     }
 
-    //update depth
+    // update depth
     update_potential(
         nodes,
         path_to_change,
@@ -624,7 +620,7 @@ fn update_thread_last(
     let nodeid_to_block = nodes.revthread[start_block.index()];
     nodes.thread[nodeid_to_block.index()] = nodes.thread[end_block];
     dirty_rev_thread.push(nodeid_to_block);
-    //TEST
+    // TEST
 
     if start_block != i && start_block != j {
         path_to_change
@@ -676,21 +672,21 @@ fn update_thread_last(
     });
 
     let check_last_join = nodes.last[join] == path_to_root[0];
-    //update lasts array
+    // update lasts array
     path_to_change
         .iter()
         .take(path_to_change.len() - 1)
         .for_each(|&x| nodes.last[x] = nodes.last[*path_to_change.last().unwrap()]);
 
     let last_out = nodes.last[start_block];
-    //update lasts along path to root
+    // update lasts along path to root
     let mut current = Some(path_to_root[0]);
     while current.is_some() && nodes.last[current.unwrap()] == path_to_root[0] {
         nodes.last[current.unwrap()] = nodes.last[*path_to_change.last().unwrap()];
         current = nodes.predecessor[current.unwrap()];
     }
 
-    //update last along from leaving arc to the root
+    // update last along from leaving arc to the root
     let before2;
     if old_last_succ == end_block {
         if old_rev_thread == connect_node && connect_node == join {
@@ -850,7 +846,7 @@ pub fn min_cost<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy>(
     thread_nb: usize,
     scaling: usize,
 ) -> (State<NUM>, Vec<NUM>, Vec<NUM>) {
-    //print_init(pivotrule, thread_nb, scaling);
+    // print_init(pivotrule, thread_nb, scaling);
     let (nodes, edges, graphstate) = initialization::<NUM>(&mut graph, sources, sinks.clone());
     let state: State<NUM> = State {
         nodes_state: (nodes),
@@ -865,20 +861,20 @@ pub fn min_cost<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy>(
 pub fn min_cost_from_state<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy>(
     mut graph: DiGraph<u32, CustomEdgeIndices<NUM>>,
     state: State<NUM>,
-    sinks: Vec<(usize, NUM)>, //vec![(node_id, demand)]
+    sinks: Vec<(usize, NUM)>, //vector of [(node_id, demand)]
     pivotrule: PR,
     thread_nb: usize,
     scaling: usize,
 ) -> (State<NUM>, Vec<NUM>, Vec<NUM>) {
-    //print_init(pivotrule, thread_nb, scaling);
+    // print_init(pivotrule, thread_nb, scaling);
     solve(&mut graph, state, sinks, pivotrule, thread_nb, scaling)
 }
 
-//main algorithm function
+// main algorithm function
 fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
     graph: &mut DiGraph<u32, CustomEdgeIndices<NUM>>,
     state: State<NUM>,
-    sinks: Vec<(usize, NUM)>, //vec![(node_id, demand)]
+    sinks: Vec<(usize, NUM)>, //vector of [(node_id, demand)]
     pivotrule: PR,
     thread_nb: usize,
     scaling: usize,
@@ -895,7 +891,7 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
         state.graph_state,
     );
 
-    //multiply_factor and divide_factor change size of blocksize
+    // multiply_factor and divide_factor change size of blocksize
     let multiply_factor = scaling;
     let divide_factor = 1;
 
@@ -908,17 +904,17 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
         / divide_factor as usize;
     let mut iteration = 0;
 
-    //first arc to enter
+    // first arc to enter
     let (mut _index, mut entering_arc) =
         pivotrule.find_entering_arc(&edges, &graphstate, 0, _block_size);
 
     while entering_arc.is_some() {
-        //update flow + find leaving arc
+        // update flow + find leaving arc
         let (leaving_arc, branch, join) =
             _compute_flowchange(&edges, &nodes, &mut graphstate, entering_arc.unwrap());
 
-        //potentials update
-        //tree structure update
+        // potentials update
+        // tree structure update
 
         update_tree_structures(
             &edges,
@@ -931,13 +927,13 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
             _index,
         );
 
-        //printer
+        // printer
         /*
         if iteration == 1 || (iteration != 0 && iteration % 5000000 == 0) {
             print_status(iteration, start, graph, &graphstate, &edges)
         }*/
 
-        //finding new arc for the next iteration
+        // finding new arc for the next iteration
         (_index, entering_arc) =
             pivotrule.find_entering_arc(&edges, &graphstate, _index.unwrap(), _block_size);
 
