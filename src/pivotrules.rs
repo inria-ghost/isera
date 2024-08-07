@@ -272,53 +272,6 @@ impl<NUM: CloneableNum> PivotRules<NUM> for ParallelBestEligible<NUM> {
     }
 }
 
-/*
-fn find_entering_arc(
-        &self,
-        edges: &Edges<NUM>,
-        nodes: &Nodes<NUM>,
-        graphstate: &GraphState<NUM>,
-        _index: usize,
-        _block_size: usize,
-        //return (arc_index, arc_id)
-    ) -> (Option<usize>, Option<usize>) {
-        let thread_nb = rayon::current_num_threads();
-        let mut mins = vec![zero(); thread_nb];
-        let mut arcs: Vec<(Option<usize>, Option<usize>)> = vec![(None, None); thread_nb];
-        let chunk_size: usize = (graphstate.out_base.len() / thread_nb) + 1;
-        let chunks: &Vec<&[usize]> = &graphstate.out_base.chunks(chunk_size).collect();
-        std::thread::scope(|s| {
-            for (i, (rc_cand, candidate)) in std::iter::zip(&mut mins, &mut arcs).enumerate() {
-                s.spawn(move || {
-                    for (index, &arc) in chunks[i].iter().enumerate() {
-                        let rc = graphstate.state[arc]
-                            * (edges.cost[arc] - nodes.potential[edges.source[arc]]
-                                + nodes.potential[edges.target[arc]]);
-                        if rc < *rc_cand {
-                            *rc_cand = rc;
-                            *candidate = (Some(chunk_size * i + index), Some(arc));
-                        }
-                    }
-                });
-            }
-        });
-        let mut min = mins[0];
-        let mut id = 0;
-        for (index, rc) in mins.iter().enumerate() {
-            if rc < &min {
-                min = *rc;
-                id = index;
-            }
-        }
-
-        if min != zero() {
-            return arcs[id];
-        }
-        (None, None)
-    }
-
-*/
-
 impl<NUM: CloneableNum> PivotRules<NUM> for FirstEligible<NUM> {
     fn find_entering_arc(
         &self,
@@ -326,7 +279,7 @@ impl<NUM: CloneableNum> PivotRules<NUM> for FirstEligible<NUM> {
         graphstate: &GraphState<NUM>,
         index: usize,
         _block_size: usize,
-        //return (arc_index, arc_id)
+        // returns (arc_index, arc_id)
     ) -> (Option<usize>, Option<usize>) {
         for i in index + 1..graphstate.out_base.len() {
             let arc = graphstate.out_base[i];
@@ -336,7 +289,7 @@ impl<NUM: CloneableNum> PivotRules<NUM> for FirstEligible<NUM> {
             if rc < zero() {
                 return (Some(i), Some(arc));
             }
-        } //TODO get_unchecked
+        } // TODO get_unchecked
         for i in 0..index + 1 {
             let arc = unsafe { *graphstate.out_base.get_unchecked(i) };
             let rc = unsafe {

@@ -20,8 +20,8 @@ pub fn parsed_graph<NUM: CloneableNum>(
     filename: String,
 ) -> (
     DiGraph<u32, CustomEdgeIndices<NUM>>,
-    Vec<(usize, NUM)>, // Vec<(usize, NUM)>
-    Vec<(usize, NUM)>, // Vec<(usize, NUM)>
+    Vec<(usize, NUM)>,
+    Vec<(usize, NUM)>,
 )
 where
     <NUM as std::str::FromStr>::Err: std::fmt::Debug,
