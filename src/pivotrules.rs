@@ -247,8 +247,7 @@ impl<NUM: CloneableNum> PivotRules<NUM> for ParallelBestEligible<NUM> {
                     .partial_cmp(&get_rc_from_arc(arc2, edges, graphstate))
                     .unwrap()
             });
-        if candidate.is_some()
-            && get_rc_from_arc(*candidate.unwrap().1, edges, graphstate) < zero()
+        if candidate.is_some() && get_rc_from_arc(*candidate.unwrap().1, edges, graphstate) < zero()
         {
             index = Some(candidate.unwrap().0);
             arc = Some(*candidate.unwrap().1);

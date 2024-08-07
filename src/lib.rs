@@ -813,7 +813,10 @@ fn print_status<NUM: CloneableNum + 'static>(
             println!("Error: {e:?}");
         }
     }
-    print!("iteration = {:?}, cost = {:?}, time = {:?}, ",iteration, cost, time);
+    print!(
+        "iteration = {:?}, cost = {:?}, time = {:?}, ",
+        iteration, cost, time
+    );
     /*
     print!(
         "{:>12}{:>25}{:>12}{:>12}{:>12}\n",

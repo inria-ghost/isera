@@ -2,7 +2,9 @@ use isera::basetypes::*;
 use petgraph::graph::*;
 use std::fs;
 
-pub fn parsed_graph<NUM: CloneableNum>(filename:String) -> (
+pub fn parsed_graph<NUM: CloneableNum>(
+    filename: String,
+) -> (
     DiGraph<u32, CustomEdgeIndices<NUM>>,
     Vec<(usize, NUM)>, // Vec<(usize, NUM)>
     Vec<(usize, NUM)>, // Vec<(usize, NUM)>
@@ -19,7 +21,7 @@ where
     contents.lines().for_each(|x| {
         if x.chars().nth(0) == Some('p') {
             let line = x.split(' ').collect::<Vec<&str>>()[1..].to_vec();
-            for i in 0..line[1].parse::<u32>().unwrap()+1 {
+            for i in 0..line[1].parse::<u32>().unwrap() + 1 {
                 graph.add_node(i);
             }
         };
