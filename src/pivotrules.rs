@@ -15,8 +15,8 @@
 use crate::basetypes::*;
 use num_traits::identities::zero;
 use rayon::prelude::*;
-use std::marker::PhantomData;
 use std::fmt;
+use std::marker::PhantomData;
 
 #[derive(Debug, Clone, Copy)]
 pub struct BlockSearch<NUM: CloneableNum> {
