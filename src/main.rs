@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use clap::Parser;
-use isera::pivotrules::*;
 use isera::*;
 use std::marker::PhantomData;
 
@@ -36,6 +35,9 @@ fn main() {
         /// kfactor for block size, only for block search pivot rule
         #[arg(short, long, default_value_t = 1)]
         kfactor: usize,
+        /// pivot rule to use to find the entering arc
+        #[arg(short, long, default_value = "block")]
+        pivotrule: String,
     }
 
     let args = Args::parse();
@@ -43,26 +45,20 @@ fn main() {
     let _file_path: String = args.filename;
     let nbproc = args.nbproc;
     let kfactor = args.kfactor;
-
+    let mut pivotrulearg = args.pivotrule;
+    if nbproc < 2 && pivotrulearg.contains("par") {
+        pivotrulearg = "block".to_string();
+    }
     let (graph, sources, sinks) = parsed_graph::<i64>(_file_path);
 
-    let _best: BestEligible<i64> = BestEligible {
-        phantom: PhantomData,
+    print!("File: {:?}, ", file);
+    let _min_cost_flow = match pivotrulearg.as_str() {
+        "best" => min_cost(graph, sources, sinks, &pivotrules::BestEligible{phantom: PhantomData}, nbproc, kfactor),
+        "parbest" => min_cost(graph, sources, sinks, &pivotrules::ParallelBestEligible{phantom: PhantomData}, nbproc, kfactor),
+        "parblock" => min_cost(graph, sources, sinks, &pivotrules::ParallelBlockSearch{phantom: PhantomData}, nbproc, kfactor),
+        "first" => min_cost(graph, sources, sinks, &pivotrules::FirstEligible{phantom: PhantomData}, nbproc, kfactor),
+        _ => min_cost(graph, sources, sinks, &pivotrules::BlockSearch{phantom: PhantomData}, nbproc, kfactor),
     };
 
-    let _seq_bs: BlockSearch<i64> = BlockSearch {
-        phantom: PhantomData,
-    };
-    let _par_bs: ParallelBlockSearch<i64> = ParallelBlockSearch {
-        phantom: PhantomData,
-    };
-    print!("{:?}, ", file);
-    let _min_cost_flow;
-    if nbproc == 1 {
-        _min_cost_flow = min_cost(graph, sources, sinks, _seq_bs, nbproc, kfactor);
-        //_min_cost_flow = min_cost(graph, sources, sinks, _best, nbproc, kfactor);
-    } else {
-        _min_cost_flow = min_cost(graph, sources, sinks, _par_bs, nbproc, kfactor);
-    }
     print!("k = {:?}, nbproc = {:?}\n", kfactor, nbproc);
 }

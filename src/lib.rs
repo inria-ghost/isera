@@ -842,7 +842,7 @@ pub fn min_cost<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy>(
     mut graph: DiGraph<u32, CustomEdgeIndices<NUM>>,
     sources: Vec<(usize, NUM)>, //(node_id, demand)
     sinks: Vec<(usize, NUM)>,   //(node_id, demand)
-    pivotrule: PR,
+    pivotrule: &PR,
     thread_nb: usize,
     scaling: usize,
 ) -> (State<NUM>, Vec<NUM>, Vec<NUM>) {
@@ -862,7 +862,7 @@ pub fn min_cost_from_state<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Co
     mut graph: DiGraph<u32, CustomEdgeIndices<NUM>>,
     state: State<NUM>,
     sinks: Vec<(usize, NUM)>, //vector of [(node_id, demand)]
-    pivotrule: PR,
+    pivotrule: &PR,
     thread_nb: usize,
     scaling: usize,
 ) -> (State<NUM>, Vec<NUM>, Vec<NUM>) {
@@ -875,7 +875,7 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
     graph: &mut DiGraph<u32, CustomEdgeIndices<NUM>>,
     state: State<NUM>,
     sinks: Vec<(usize, NUM)>, //vector of [(node_id, demand)]
-    pivotrule: PR,
+    pivotrule: &PR,
     thread_nb: usize,
     scaling: usize,
 ) -> (State<NUM>, Vec<NUM>, Vec<NUM>) {
