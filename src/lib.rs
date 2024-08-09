@@ -278,7 +278,7 @@ unsafe fn _update_node_potentials<'a, NUM: CloneableNum>(
     }
 }
 
-fn _compute_flowchange<'a, NUM: CloneableNum>(
+fn compute_flowchange<'a, NUM: CloneableNum>(
     edges: &Edges<NUM>,
     nodes: &Nodes,
     graphstate: &mut GraphState<NUM>,
@@ -905,7 +905,7 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
     while entering_arc.is_some() {
         // update flow + find leaving arc
         let (leaving_arc, branch, join) =
-            _compute_flowchange(&edges, &nodes, &mut graphstate, entering_arc.unwrap());
+            compute_flowchange(&edges, &nodes, &mut graphstate, entering_arc.unwrap());
 
         // potentials update
         // tree structure update
