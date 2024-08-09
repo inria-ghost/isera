@@ -895,13 +895,18 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
     let multiply_factor = scaling;
     let divide_factor = 1;
 
-    //set block size such taht its either sqrt(|E|) or |E|/100
+    // set block size such taht its either sqrt(|E|) or |E|/100
     let mut _block_size = multiply_factor
         * std::cmp::min(
             (graphstate.out_base.len() as f64).sqrt() as usize,
             graphstate.out_base.len() / 100,
         )
         / divide_factor as usize;
+    // safety for smaller graphs
+    if _block_size < 1 {
+        _block_size = 1;
+    }
+    print!("DEBUG: {:?} {:?} {:?}", graphstate.out_base.len(), multiply_factor, _block_size);
     let mut iteration = 0;
 
     // first arc to enter
