@@ -16,6 +16,7 @@ use crate::basetypes::*;
 use num_traits::identities::zero;
 use rayon::prelude::*;
 use std::marker::PhantomData;
+use std::fmt;
 
 #[derive(Debug, Clone, Copy)]
 pub struct BlockSearch<NUM: CloneableNum> {
@@ -36,6 +37,36 @@ pub struct ParallelBlockSearch<NUM: CloneableNum> {
 #[derive(Debug, Clone, Copy)]
 pub struct ParallelBestEligible<NUM: CloneableNum> {
     pub phantom: PhantomData<NUM>,
+}
+
+impl<T: CloneableNum> fmt::Display for BlockSearch<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "BlockSearch")
+    }
+}
+
+impl<T: CloneableNum> fmt::Display for FirstEligible<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "FirstEligible")
+    }
+}
+
+impl<T: CloneableNum> fmt::Display for BestEligible<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "BestEligible")
+    }
+}
+
+impl<T: CloneableNum> fmt::Display for ParallelBlockSearch<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ParallelBlockSearch")
+    }
+}
+
+impl<T: CloneableNum> fmt::Display for ParallelBestEligible<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ParallelBestEligible")
+    }
 }
 
 pub trait PivotRules<NUM: CloneableNum> {
