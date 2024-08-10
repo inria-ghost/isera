@@ -278,7 +278,7 @@ unsafe fn _update_node_potentials<'a, NUM: CloneableNum>(
     }
 }
 
-fn _compute_flowchange<'a, NUM: CloneableNum>(
+fn compute_flowchange<'a, NUM: CloneableNum>(
     edges: &Edges<NUM>,
     nodes: &Nodes,
     graphstate: &mut GraphState<NUM>,
@@ -783,18 +783,21 @@ fn pred_edgetree_update(
         });
 }
 
-fn print_init<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
-    _pivotrule: PR,
+#[allow(dead_code)]
+fn print_init<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + ToString>(
+    pivotrule: PR,
     thread_nb: usize,
     scaling: usize,
+    max_iteration: usize,
 ) {
     println!("\nIsera network simplex algorithm ");
     println!(
-        "PIVOT_RULE: {:?} THREAD_NB: {:?} K_FACTOR: {:?}, TYPE: {:?}, MAX_ITERATION: TODO\n",
-        std::any::type_name::<PR>().trim_start_matches("isera::pivotrules::"),
+        "PIVOT_RULE: {:?} THREAD_NB: {:?} K_FACTOR: {:?}, TYPE: {:?}, MAX_ITERATION: {:?}\n",
+        pivotrule.to_string(),
         thread_nb,
         scaling,
-        std::any::type_name::<NUM>()
+        std::any::type_name::<NUM>(),
+        max_iteration,
     );
     println!("--------------------------------------------------------------------------");
     println!("   Iteration                   Primal        Dual        Time      It/sec ");
@@ -827,15 +830,6 @@ fn print_status<NUM: CloneableNum + 'static>(
         "iteration = {:?}, cost = {:?}, time = {:?}, ",
         iteration, cost, time
     );
-    /*
-    print!(
-        "{:>12}{:>25}{:>12}{:>12}{:>12}\n",
-        format!("{:?}", iteration),
-        format!("{:?}", cost),
-        format!("__"),
-        format!("{:.3}", time),
-        format!("{:.0}", (iteration as f64) / time),
-    );*/
 }
 
 pub fn min_cost<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy>(
@@ -916,7 +910,7 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
     while entering_arc.is_some() {
         // update flow + find leaving arc
         let (leaving_arc, branch, join) =
-            _compute_flowchange(&edges, &nodes, &mut graphstate, entering_arc.unwrap());
+            compute_flowchange(&edges, &nodes, &mut graphstate, entering_arc.unwrap());
 
         // potentials update
         // tree structure update
