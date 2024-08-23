@@ -38,6 +38,9 @@ fn main() {
         /// pivot rule to use to find the entering arc
         #[arg(short, long, default_value = "block")]
         pivotrule: String,
+        /// maximum iteration
+        #[arg(short, long, default_value_t = 20000000)]
+        max_iteration: usize,
     }
 
     let args = Args::parse();
@@ -46,6 +49,7 @@ fn main() {
     let nbproc = args.nbproc;
     let kfactor = args.kfactor;
     let mut pivotrulearg = args.pivotrule;
+    let max_iteration = args.max_iteration;
     if nbproc < 2 && pivotrulearg.contains("par") {
         pivotrulearg = "block".to_string();
     }
@@ -53,12 +57,40 @@ fn main() {
 
     print!("File: {:?}, ", file);
     let _min_cost_flow = match pivotrulearg.as_str() {
-        "best" => min_cost(graph, sources, sinks, &pivotrules::BestEligible{phantom: PhantomData}, nbproc, kfactor),
-        "parbest" => min_cost(graph, sources, sinks, &pivotrules::ParallelBestEligible{phantom: PhantomData}, nbproc, kfactor),
-        "parblock" => min_cost(graph, sources, sinks, &pivotrules::ParallelBlockSearch{phantom: PhantomData}, nbproc, kfactor),
-        "first" => min_cost(graph, sources, sinks, &pivotrules::FirstEligible{phantom: PhantomData}, nbproc, kfactor),
-        _ => min_cost(graph, sources, sinks, &pivotrules::BlockSearch{phantom: PhantomData}, nbproc, kfactor),
+        "best" => min_cost(graph, sources, sinks, &pivotrules::BestEligible{phantom: PhantomData}, nbproc, kfactor, max_iteration),
+        "parbest" => min_cost(graph, sources, sinks, &pivotrules::ParallelBestEligible{phantom: PhantomData}, nbproc, kfactor, max_iteration),
+        "parblock" => min_cost(graph, sources, sinks, &pivotrules::ParallelBlockSearch{phantom: PhantomData}, nbproc, kfactor, max_iteration),
+        "first" => min_cost(graph, sources, sinks, &pivotrules::FirstEligible{phantom: PhantomData}, nbproc, kfactor, max_iteration),
+        _ => min_cost(graph, sources, sinks, &pivotrules::BlockSearch{phantom: PhantomData}, nbproc, kfactor, max_iteration),
     };
 
-    print!("k = {:?}, nbproc = {:?}\n", kfactor, nbproc);
+    /* WARM START EXAMPLE
+    println!("\nWarmStart");
+
+    //COST MODIFICATIONS
+    let mut rng = rand::thread_rng();
+    state.edges_state.cost.iter_mut().for_each(|x| {
+        let mut y: u64 = rng.gen();
+        let mut z: u64 = rng.gen();
+        y = y % 500;
+        z = z % 100;
+        if z < 50 {
+            *x = *x + y as i64;
+        } else {
+            if *x > y as i64 {
+                *x = *x - y as i64;
+            } else {
+                *x = *x + y as i64;
+            }
+        }
+    });
+
+    let new_costs = state.edges_state.cost.clone();
+
+    let (_state2, _flow2, _potential2, _graph2) =
+        min_cost_from_state(new_graph, state, sinks.clone(), new_costs, _seq_bs, 1, 1);
+
+    println!("{:?}", potential.len());
+    */
+    //println!("{:?}", potential);
 }

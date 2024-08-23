@@ -783,7 +783,6 @@ fn pred_edgetree_update(
         });
 }
 
-#[allow(dead_code)]
 fn print_init<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + ToString>(
     pivotrule: PR,
     thread_nb: usize,
@@ -799,9 +798,9 @@ fn print_init<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + ToString>(
         std::any::type_name::<NUM>(),
         max_iteration,
     );
-    println!("--------------------------------------------------------------------------");
-    println!("   Iteration                   Primal        Dual        Time      It/sec ");
-    println!("--------------------------------------------------------------------------");
+    println!("---------------------------------------------------------------");
+    println!("   Iteration                   Primal        Time      It/sec  "); 
+    println!("---------------------------------------------------------------");
 }
 
 fn print_status<NUM: CloneableNum + 'static>(
@@ -827,20 +826,24 @@ fn print_status<NUM: CloneableNum + 'static>(
         }
     }
     print!(
-        "iteration = {:?}, cost = {:?}, time = {:?}, ",
-        iteration, cost, time
+        "{:>12}{:>25}{:>12}{:>12}\n",
+        format!("{:?}", iteration),
+        format!("{:?}", cost),
+        format!("{:.3}", time),
+        format!("{:.0}", (iteration as f64) / time),
     );
 }
 
-pub fn min_cost<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy>(
+pub fn min_cost<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy+ ToString>(
     mut graph: DiGraph<u32, CustomEdgeIndices<NUM>>,
     sources: Vec<(usize, NUM)>, //(node_id, demand)
     sinks: Vec<(usize, NUM)>,   //(node_id, demand)
     pivotrule: &PR,
     thread_nb: usize,
     scaling: usize,
+    max_iteration: usize
 ) -> (State<NUM>, Vec<NUM>, Vec<NUM>) {
-    // print_init(pivotrule, thread_nb, scaling);
+    print_init(*pivotrule, thread_nb, scaling, max_iteration);
     let (nodes, edges, graphstate) = initialization::<NUM>(&mut graph, sources, sinks.clone());
     let state: State<NUM> = State {
         nodes_state: (nodes),
@@ -849,19 +852,20 @@ pub fn min_cost<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy>(
         status: (Status::DemandGap),
     };
 
-    solve(&mut graph, state, sinks, pivotrule, thread_nb, scaling)
+    solve(&mut graph, state, sinks, pivotrule, thread_nb, scaling, max_iteration)
 }
 
-pub fn min_cost_from_state<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy>(
+pub fn min_cost_from_state<NUM: CloneableNum + 'static, PR: PivotRules<NUM> + Copy+ ToString>(
     mut graph: DiGraph<u32, CustomEdgeIndices<NUM>>,
     state: State<NUM>,
     sinks: Vec<(usize, NUM)>, //vector of [(node_id, demand)]
     pivotrule: &PR,
     thread_nb: usize,
     scaling: usize,
+    max_iteration: usize,
 ) -> (State<NUM>, Vec<NUM>, Vec<NUM>) {
-    // print_init(pivotrule, thread_nb, scaling);
-    solve(&mut graph, state, sinks, pivotrule, thread_nb, scaling)
+    print_init(*pivotrule, thread_nb, scaling, max_iteration);
+    solve(&mut graph, state, sinks, pivotrule, thread_nb, scaling, max_iteration)
 }
 
 // main algorithm function
@@ -872,6 +876,7 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
     pivotrule: &PR,
     thread_nb: usize,
     scaling: usize,
+    max_iteration: usize,
 ) -> (State<NUM>, Vec<NUM>, Vec<NUM>) {
     let start = SystemTime::now();
     ThreadPoolBuilder::new()
@@ -900,14 +905,14 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
     if _block_size < 1 {
         _block_size = 1;
     }
-    print!("DEBUG: {:?} {:?} {:?}", graphstate.out_base.len(), multiply_factor, _block_size);
+    //print!("DEBUG: {:?} {:?} {:?}", graphstate.out_base.len(), multiply_factor, _block_size);
     let mut iteration = 0;
 
     // first arc to enter
     let (mut _index, mut entering_arc) =
         pivotrule.find_entering_arc(&edges, &graphstate, 0, _block_size);
 
-    while entering_arc.is_some() {
+    while entering_arc.is_some() && iteration < max_iteration {
         // update flow + find leaving arc
         let (leaving_arc, branch, join) =
             compute_flowchange(&edges, &nodes, &mut graphstate, entering_arc.unwrap());
@@ -927,10 +932,9 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
         );
 
         // printer
-        /*
-        if iteration == 1 || (iteration != 0 && iteration % 5000000 == 0) {
+        if iteration == 1 || (iteration != 0 && iteration % 1000000 == 0) {
             print_status(iteration, start, graph, &graphstate, &edges)
-        }*/
+        }
 
         // finding new arc for the next iteration
         (_index, entering_arc) =
@@ -961,10 +965,10 @@ fn solve<NUM: CloneableNum + 'static, PR: PivotRules<NUM>>(
     }
 
     print_status(iteration, start, graph, &graphstate, &edges);
-    /*
-    println!("--------------------------------------------------------------------------");
+    
+    println!("---------------------------------------------------------------");
     println!("STATUS: {:?}", status);
-    */
+    
     let state: State<NUM> = State {
         nodes_state: (nodes),
         graph_state: (graphstate.clone()),
